@@ -202,6 +202,28 @@ asmlinkage void __cpuinit secondary_start_kernel(void)
 	if (cpu_ops[cpu]->cpu_postboot)
 		cpu_ops[cpu]->cpu_postboot();
 
+	/*
+	 * Let the primary processor know we're out of the
+	 * pen, then head off into the C entry point
+	 */
+	write_pen_release(INVALID_HWID);
+
+	/*
+	 * Synchronise with the boot thread.
+	 */
+	raw_spin_lock(&boot_lock);
+	raw_spin_unlock(&boot_lock);
+
+	/*
+	 * Log the CPU info before it is marked online and might get read.
+	 */
+	cpuinfo_store_cpu();
+
+	/*
+	 * OK, now it's safe to let the boot CPU continue.  Wait for
+	 * the CPU migration code to notice that the CPU is online
+	 * before we continue.
+	 */
 	set_cpu_online(cpu, true);
 	complete(&cpu_running);
 
