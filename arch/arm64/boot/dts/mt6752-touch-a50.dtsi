@@ -1,0 +1,5 @@
+/{
+	touch_fw_update {
+		compatible = "htc,touch_fwu";
+	};
+};
